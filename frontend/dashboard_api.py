@@ -50,6 +50,10 @@ def sync_dashboard():
     cursor.execute("SELECT COUNT(*) FROM inventory WHERE status = 'quarantined'")
     quarantined_count = cursor.fetchone()[0]
     
+    # Check for human escalation
+    cursor.execute("SELECT 1 FROM alerts WHERE human_needed = 1 AND status = 'pending' LIMIT 1")
+    escalation_alert = bool(cursor.fetchone())
+    
     conn.close()
     
     # 5. Compile State
@@ -58,6 +62,7 @@ def sync_dashboard():
         "alerts": alerts,
         "quarantined": quarantined,
         "store_status": store_status,
+        "escalation_alert": escalation_alert,
         "stats": {
             "pending_alerts": pending_alerts,
             "quarantined_items": quarantined_count,
