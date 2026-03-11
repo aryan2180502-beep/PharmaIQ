@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+.git/
+.gemini/
+.agent/
+data.db
+db/data.db
+frontend/data.json
+vector_store/
+artifacts/
+*.log

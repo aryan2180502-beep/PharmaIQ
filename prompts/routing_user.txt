@@ -1,0 +1,6 @@
+Categorize the following incoming signal into SOMA, PULSE, or HUMAN_ESCALATION.
+
+Signal Data:
+{{SIGNAL_JSON}}
+
+Agent Name:

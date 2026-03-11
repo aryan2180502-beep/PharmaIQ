@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaIQ Live Operations Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent-primary: #38bdf8;
+            --accent-secondary: #818cf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: var(--bg-color);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(129, 140, 248, 0.15) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-badge {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Store Status Grid */
+        .store-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .store-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .store-box.stable {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.05);
+        }
+
+        .store-box.warning {
+            border-color: var(--warning);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .store-box.critical {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .store-box h5 {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .store-box .status-text {
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* Activity Log */
+        #activity-log {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        #activity-log::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #activity-log::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .card-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .alert-item.critical {
+            border-left-color: var(--danger);
+        }
+
+        .alert-item.warning {
+            border-left-color: var(--warning);
+        }
+
+        .alert-content h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-content p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .alert-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        td {
+            padding: 1rem;
+            font-size: 0.875rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .badge-pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.4;
+            }
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem;
+            border-radius: 1rem;
+            width: fit-content;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--accent-primary);
+            color: var(--bg-color);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="12" fill="url(#grad)" />
+                <path d="M20 10V30M10 20H30" stroke="white" stroke-width="4" stroke-linecap="round" />
+                <defs>
+                    <linearGradient id="grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#38bdf8" />
+                        <stop offset="1" stop-color="#818cf8" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <h1>PharmaIQ Dashboard</h1>
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            Live Operational Monitoring
+        </div>
+    </header>
+
+    <div class="tabs">
+        <div class="tab active">Overview</div>
+        <div class="tab">Escalation Queue</div>
+        <div class="tab">Inventory Risk</div>
+        <div class="tab">Fleet Status</div>
+    </div>
+
+    <div id="tab-overview" class="tab-content active">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Live Store Health (All 10 Stores)</div>
+            </div>
+            <div class="store-grid" id="store-grid">
+                <!-- 10 Store boxes will be injected here -->
+            </div>
+        </div>
+
+        <div class="dashboard-grid" style="margin-top: 2rem;">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Pharmacist Coverage</div>
+                    <div class="card-value" id="coverage-val">100%</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Active Quarantine</div>
+                    <div class="card-value" id="quarantine-stat">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+            <div class="card-header">
+                <div class="card-title">Weekly Demand Forecast (PULSE)</div>
+            </div>
+            <div style="height: 200px; display: flex; align-items: flex-end; gap: 1rem; padding-bottom: 2rem;">
+                <div
+                    style="flex: 1; height: 40%; background: var(--accent-secondary); border-radius: 0.5rem 0.5rem 0 0;">
+                </div>
+                <div
+                    style="flex: 1; height: 60%; background: var(--accent-secondary); border-radius: 0.5rem 0.5rem 0 0;">
+                </div>
+                <div
+                    style="flex: 1; height: 95%; background: var(--accent-primary); border-radius: 0.5rem 0.5rem 0 0; box-shadow: 0 0 20px var(--accent-primary);">
+                </div>
+                <div
+                    style="flex: 1; height: 75%; background: var(--accent-secondary); border-radius: 0.5rem 0.5rem 0 0;">
+                </div>
+                <div
+                    style="flex: 1; height: 50%; background: var(--accent-secondary); border-radius: 0.5rem 0.5rem 0 0;">
+                </div>
+                <div
+                    style="flex: 1; height: 45%; background: var(--accent-secondary); border-radius: 0.5rem 0.5rem 0 0;">
+                </div>
+                <div
+                    style="flex: 1; height: 30%; background: var(--accent-secondary); border-radius: 0.5rem 0.5rem 0 0;">
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.75rem;">
+                <span>Mumbai</span><span>Delhi</span><span>Bengaluru</span><span>Chennai</span><span>Hyderabad</span><span>Pune</span><span>Kolkata</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-escalation" class="tab-content">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">System Activity Log (Signal History)</div>
+            </div>
+            <div id="activity-log">
+                <!-- Activity signals will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-inventory" class="tab-content">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Inventory Quarantined</div>
+                <div class="card-value" id="quarantine-count">0</div>
+            </div>
+            <div id="inventory-list">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Store</th>
+                            <th>SKU</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-fleet" class="tab-content">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Fleet & Delivery Status</div>
+            </div>
+            <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🚚</div>
+                <p>Fleet tracking is currently simulated. 15 vehicles active across 4 zones.</p>
+                <div class="dashboard-grid" style="margin-top: 2rem;">
+                    <div class="card" style="background: rgba(255,255,255,0.02)">
+                        <h5>Mumbai Zone</h5>
+                        <p style="color: var(--success)">On Track</p>
+                    </div>
+                    <div class="card" style="background: rgba(255,255,255,0.02)">
+                        <h5>Delhi Zone</h5>
+                        <p style="color: var(--warning)">Delayed (Weather)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function refreshDashboard() {
+            try {
+                const response = await fetch('data.json');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const state = await response.json();
+
+                // 1. Update Stats
+                document.getElementById('quarantine-count').innerText = state.stats.quarantined_items;
+                document.getElementById('quarantine-stat').innerText = state.stats.quarantined_items;
+                document.getElementById('coverage-val').innerText = state.stats.coverage;
+
+                // 2. Update Store Grid
+                const storeGrid = document.getElementById('store-grid');
+                storeGrid.innerHTML = '';
+                for (let i = 1; i <= 10; i++) {
+                    const status = state.store_status[i] || 'stable';
+                    const box = document.createElement('div');
+                    box.className = `store-box ${status}`;
+                    box.innerHTML = `
+                        <h5>STORE ${i}</h5>
+                        <div class="status-text">${status}</div>
+                    `;
+                    storeGrid.appendChild(box);
+                }
+
+                // 3. Update Activity Log
+                const activityLog = document.getElementById('activity-log');
+                activityLog.innerHTML = '';
+                state.alerts.forEach(alert => {
+                    const item = document.createElement('div');
+                    item.className = `alert-item ${alert.severity}`;
+                    item.innerHTML = `
+                        <div class="alert-content">
+                            <h4 style="color: var(--accent-primary)">${alert.type.toUpperCase()} SIGNAL @ STORE ${alert.store_id}</h4>
+                            <p style="margin: 0.25rem 0">${alert.action_taken}</p>
+                            <div class="alert-time">${new Date(alert.ts).toLocaleTimeString()} - Agent: ${alert.agent}</div>
+                        </div>
+                    `;
+                    activityLog.prepend(item); // Newest at top
+                });
+
+                // 4. Update Inventory Table
+                const invTableBody = document.querySelector('#inventory-list tbody');
+                invTableBody.innerHTML = '';
+                state.quarantined.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>Store ${item.store_id}</td>
+                        <td>${item.drug_name}</td>
+                        <td><span class="badge-pill badge-${item.status === 'quarantined' ? 'danger' : 'warning'}">${item.status}</span></td>
+                    `;
+                    invTableBody.appendChild(row);
+                });
+
+                console.log('Dashboard refreshed at', state.last_sync);
+            } catch (err) {
+                console.warn('Dashboard fetch error (Server might be starting...):', err.message);
+            }
+        }
+
+        // Initial load
+        refreshDashboard();
+        // Refresh every 5 seconds
+        setInterval(refreshDashboard, 5000);
+
+        // Tab switching logic
+        const tabs = document.querySelectorAll('.tab');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach((tab, index) => {
+            tab.addEventListener('click', () => {
+                // Update tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Update content visibility
+                contents.forEach(c => c.classList.remove('active'));
+                contents[index].classList.add('active');
+
+                console.log('Switched to tab:', tab.innerText);
+            });
+        });
+    </script>
+</body>
+
+</html>

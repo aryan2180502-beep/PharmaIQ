@@ -1,0 +1,12 @@
+Generate a JSON list of 6 diverse operational signals for a pharmacy management system called PharmaIQ.
+Each signal should be a JSON object.
+
+The types of signals needed are:
+1. A normal cold chain reading (between 2 and 8 C).
+2. A critical cold chain breach (e.g., 15 C for 30 minutes).
+3. A steady epidemic uptick (+25% WoW growth in a district).
+4. A massive epidemic explosion (+150% WoW growth).
+5. A near-expiry inventory item (e.g., 20 days left, low sales velocity).
+6. An ambiguous natural language request from a store manager about maintenance or potential future risks.
+
+Output ONLY the raw JSON array. No markdown formatting, no backticks, no explanatory text.
