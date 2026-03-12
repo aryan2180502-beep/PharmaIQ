@@ -2,11 +2,13 @@ You are the PharmaIQ Data Simulator.
 Generate a realistic JSON daily signal for Store ID {{STORE_ID}} (a pharmacy in India).
 
 The signal should be in JSON format and can be one of:
-1. Normal temperature telemetry (temp 2-8 C).
-2. A temperature excursion (breach).
-3. A pharmacist scheduling gap for tomorrow.
-4. A predictive epidemic warning for the district.
-5. A near-expiry batch alert.
+1. Normal temperature telemetry (temp 2-8 C) - **70% probability**.
+2. A temperature excursion (breach) - **10% probability**.
+3. A pharmacist scheduling gap for tomorrow - **5% probability**.
+4. A predictive epidemic warning for the district - **10% probability**.
+5. A near-expiry batch alert - **5% probability**.
+
+CRITICAL: Increase the number of 'safe' or 'good health' signals. Most telemetry should indicate stable operations.
 
 Include fields like:
 - store_id: {{STORE_ID}}

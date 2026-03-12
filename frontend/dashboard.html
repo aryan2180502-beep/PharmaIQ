@@ -55,6 +55,7 @@
             font-weight: 700;
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -114,9 +115,11 @@
             background: rgba(245, 158, 11, 0.05);
         }
 
-        .store-box.critical {
-            border-color: var(--danger);
-            background: rgba(239, 68, 68, 0.05);
+        .store-box.escalated {
+            border-color: var(--accent-secondary);
+            background: rgba(129, 140, 248, 0.1);
+            box-shadow: 0 0 15px rgba(129, 140, 248, 0.3);
+            animation: pulse 2s infinite;
         }
 
         .store-box h5 {
@@ -157,21 +160,6 @@
             }
         }
 
-        /* Escalation Alarm */
-        #escalation-alarm {
-            display: none;
-            background: var(--danger);
-            color: white;
-            padding: 1rem;
-            text-align: center;
-            font-weight: 700;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            animation: slideDown 0.5s ease-out, pulseDanger 2s infinite;
-        }
 
         @keyframes slideDown {
             from {
@@ -383,9 +371,6 @@
 </head>
 
 <body>
-    <div id="escalation-alarm">
-        🚨 CRITICAL: HUMAN ESCALATION REQUIRED. ACTION NEEDED IN ESCALATION QUEUE. 🚨
-    </div>
     <header>
         <div class="logo">
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -442,28 +427,9 @@
             <div class="card-header">
                 <div class="card-title">Weekly Demand Forecast (PULSE)</div>
             </div>
-            <div style="height: 200px; display: flex; align-items: flex-end; gap: 1rem; padding-bottom: 2rem;">
-                <div
-                    style="flex: 1; height: 40%; background: var(--accent-secondary); border-radius: 0.5rem 0.5rem 0 0;">
-                </div>
-                <div
-                    style="flex: 1; height: 60%; background: var(--accent-secondary); border-radius: 0.5rem 0.5rem 0 0;">
-                </div>
-                <div
-                    style="flex: 1; height: 95%; background: var(--accent-primary); border-radius: 0.5rem 0.5rem 0 0; box-shadow: 0 0 20px var(--accent-primary);">
-                </div>
-                <div
-                    style="flex: 1; height: 75%; background: var(--accent-secondary); border-radius: 0.5rem 0.5rem 0 0;">
-                </div>
-                <div
-                    style="flex: 1; height: 50%; background: var(--accent-secondary); border-radius: 0.5rem 0.5rem 0 0;">
-                </div>
-                <div
-                    style="flex: 1; height: 45%; background: var(--accent-secondary); border-radius: 0.5rem 0.5rem 0 0;">
-                </div>
-                <div
-                    style="flex: 1; height: 30%; background: var(--accent-secondary); border-radius: 0.5rem 0.5rem 0 0;">
-                </div>
+            <div id="forecast-chart"
+                style="height: 200px; display: flex; align-items: flex-end; gap: 1rem; padding-bottom: 2rem;">
+                <!-- Dynamic Bars -->
             </div>
             <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.75rem;">
                 <span>Mumbai</span><span>Delhi</span><span>Bengaluru</span><span>Chennai</span><span>Hyderabad</span><span>Pune</span><span>Kolkata</span>
@@ -474,10 +440,22 @@
     <div id="tab-escalation" class="tab-content">
         <div class="card">
             <div class="card-header">
-                <div class="card-title">System Activity Log (Signal History)</div>
+                <div class="card-title">Pending Human Escalations</div>
+            </div>
+            <div id="escalation-list">
+                <!-- Priority tasks requiring human review will be injected here -->
+                <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                    All clear. No pending human escalations.
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+            <div class="card-header">
+                <div class="card-title">System Activity Log (All Signals)</div>
             </div>
             <div id="activity-log">
-                <!-- Activity signals will be injected here -->
+                <!-- General signal history will be injected here -->
             </div>
         </div>
     </div>
@@ -526,6 +504,24 @@
     </div>
 
     <script>
+        async function resolveAlert(alertId, btn) {
+            if (btn) { btn.textContent = 'RESOLVING...'; btn.disabled = true; }
+            try {
+                const response = await fetch(`/api/resolve/${alertId}`, { method: 'POST' });
+                if (response.ok) {
+                    console.log(`Alert ${alertId} resolved.`);
+                    refreshDashboard();
+                } else {
+                    const err = await response.json();
+                    console.error('Resolve failed:', err);
+                    if (btn) { btn.textContent = 'ERROR'; }
+                }
+            } catch (err) {
+                console.error('Failed to resolve alert:', err);
+                if (btn) { btn.textContent = 'FAILED'; }
+            }
+        }
+
         async function refreshDashboard() {
             try {
                 const response = await fetch('data.json');
@@ -537,15 +533,7 @@
                 document.getElementById('quarantine-stat').innerText = state.stats.quarantined_items;
                 document.getElementById('coverage-val').innerText = state.stats.coverage;
 
-                // 2. Alarm Control
-                const alarm = document.getElementById('escalation-alarm');
-                if (state.escalation_alert) {
-                    alarm.style.display = 'block';
-                } else {
-                    alarm.style.display = 'none';
-                }
-
-                // 3. Update Store Grid
+                // 2. Update Store Grid
                 const storeGrid = document.getElementById('store-grid');
                 storeGrid.innerHTML = '';
                 for (let i = 1; i <= 10; i++) {
@@ -559,23 +547,39 @@
                     storeGrid.appendChild(box);
                 }
 
-                // 4. Update Activity Log
+                // 3. Update Forecast Chart
+                const forecastChart = document.getElementById('forecast-chart');
+                if (forecastChart && state.forecast_data) {
+                    forecastChart.innerHTML = '';
+                    state.forecast_data.forEach((val, idx) => {
+                        const bar = document.createElement('div');
+                        const isMax = val === Math.max(...state.forecast_data);
+                        bar.style.flex = '1';
+                        bar.style.height = `${val}%`;
+                        bar.style.background = isMax ? 'var(--accent-primary)' : 'var(--accent-secondary)';
+                        bar.style.borderRadius = '0.5rem 0.5rem 0 0';
+                        bar.style.transition = 'height 1s ease-in-out';
+                        if (isMax) bar.style.boxShadow = '0 0 20px var(--accent-primary)';
+                        forecastChart.appendChild(bar);
+                    });
+                }
+
+                // 4. Update Escalation Queue & Activity Log
+                const escList = document.getElementById('escalation-list');
                 const activityLog = document.getElementById('activity-log');
+
+                escList.innerHTML = state.escalations.length === 0 ?
+                    '<div style="padding: 2rem; text-align: center; color: var(--text-muted);">All clear. No pending human escalations.</div>' : '';
                 activityLog.innerHTML = '';
 
-                // Sorting alerts: Newest on Top (backend already does ts DESC, but we prepend)
-                state.alerts.forEach(alert => {
+                // Common alert renderer
+                const renderAlert = (alert) => {
                     const item = document.createElement('div');
                     item.className = `alert-item ${alert.severity}`;
-
-                    // Logic to extract agentic flow
-                    let flow = alert.action_taken.includes('--->') ?
-                        alert.action_taken.split('|')[0] :
-                        `Orchestrator ---> ${alert.agent}`;
-
-                    let evidence = alert.action_taken.includes('|') ?
-                        alert.action_taken.split('|')[1] :
-                        alert.action_taken;
+                    let flow = alert.action_taken.includes('--->') ? alert.action_taken.split('|')[0] : `Orchestrator ---> ${alert.agent}`;
+                    let evidence = alert.action_taken.includes('|') ? alert.action_taken.split('|')[1] : alert.action_taken;
+                    let resolveBtn = (alert.human_needed && alert.status === 'pending') ?
+                        `<button onclick="resolveAlert(${alert.alert_id}, this)" style="margin-top: 0.5rem; background: var(--success); color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 0.25rem; cursor: pointer; font-weight: 600; font-size: 0.75rem;">RESOLVE</button>` : '';
 
                     item.innerHTML = `
                         <div class="alert-content" style="width: 100%">
@@ -585,10 +589,14 @@
                             </h4>
                             <div class="flow-diagram">${flow}</div>
                             <div class="evidence-text">${evidence}</div>
+                            ${resolveBtn}
                         </div>
                     `;
-                    activityLog.appendChild(item); // Append because backend is already DESC
-                });
+                    return item;
+                };
+
+                state.escalations.forEach(esc => escList.appendChild(renderAlert(esc)));
+                state.alerts.forEach(alert => activityLog.appendChild(renderAlert(alert)));
 
                 // 5. Update Inventory Table
                 const invTableBody = document.querySelector('#inventory-list tbody');

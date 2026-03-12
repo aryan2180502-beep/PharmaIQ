@@ -40,7 +40,7 @@ def start_live_mode():
                 sync_dashboard()
             
             # Wait for next wave
-            delay = random.randint(10, 15)
+            delay = random.randint(40, 45)
             time.sleep(delay)
     except KeyboardInterrupt:
         print("\nStopping Live Mode.")

@@ -85,6 +85,23 @@ class Orchestrator:
         conn.commit()
         conn.close()
 
+    def resolve_previous_alerts(self, store_id: int, sig_type: str):
+        """Resolves previous pending alerts of the same type for a store when a healthy signal arrives."""
+        import sqlite3
+        conn = sqlite3.connect("db/pharmaiq.db")
+        cursor = conn.cursor()
+        
+        # Mark previous alerts of same type/store as resolved
+        cursor.execute("""
+            UPDATE alerts 
+            SET status = 'resolved' 
+            WHERE store_id = ? AND type = ? AND status = 'pending'
+        """, (store_id, sig_type))
+        
+        conn.commit()
+        conn.close()
+        print(f"ORCHESTRATOR: Auto-resolved previous {sig_type} alerts for Store {store_id}.")
+
     def process_signal(self, signal: dict):
         print(f"\n--- Processing Signal: {signal.get('type', 'Natural Language')} ---")
         self.state["signals"].append(signal)
@@ -94,20 +111,51 @@ class Orchestrator:
         store_id = signal.get("store_id", 1) # Default to 1
         sig_type = signal.get("type", "general")
         
-        if target == "SOMA":
-            from agents.soma import SOMA
-            agent = SOMA()
-            result = agent.run(signal)
-            severity = "critical" if "CRITICAL" in result else "warning" if "ALERT" in result else "info"
-            self.log_alert("SOMA", store_id, sig_type, severity, result)
-            self.state["history"].append(f"SOMA: {result}")
-        elif target == "PULSE":
-            from agents.pulse import PULSE
-            agent = PULSE()
-            result = agent.run(signal)
-            severity = "critical" if "CRITICAL" in result else "warning" if "ACTION" in result else "info"
-            self.log_alert("PULSE", store_id, sig_type, severity, result)
-            self.state["history"].append(f"PULSE: {result}")
+        if target in ["SOMA", "PULSE"]:
+            agent_instance = None
+            if target == "SOMA":
+                from agents.soma import SOMA
+                agent_instance = SOMA()
+            else:
+                from agents.pulse import PULSE
+                agent_instance = PULSE()
+            
+            # --- START CRITIQUE LOOP ---
+            from agents.critique import CritiqueAgent
+            critique_agent = CritiqueAgent()
+            
+            max_retries = 2
+            attempts = 0
+            feedback = None
+            result = ""
+            
+            while attempts < max_retries:
+                # Inject Critique feedback into the signal so agents can use it
+                if feedback:
+                    print(f"CRITIQUE Feedback: {feedback}")
+                    signal["feedback"] = feedback
+                
+                result = agent_instance.run(signal)
+                is_passed, feedback = critique_agent.review(target, signal, result)
+                
+                if is_passed:
+                    print(f"CRITIQUE: PASSED for {target} (attempt {attempts + 1})")
+                    break
+                else:
+                    attempts += 1
+                    print(f"CRITIQUE: RETRY (Attempt {attempts}/{max_retries - 1})")
+            
+            # Final logging
+            severity = "critical" if "CRITICAL" in result else "warning" if any(x in result for x in ["ALERT", "ACTION", "SUGGESTION"]) else "info"
+            
+            # If the result is 'info' (healthy), resolve previous alerts of this type
+            if severity == "info":
+                self.resolve_previous_alerts(store_id, sig_type)
+
+            self.log_alert(target, store_id, sig_type, severity, result)
+            self.state["history"].append(f"{target}: {result}")
+            # --- END CRITIQUE LOOP ---
+            
         else:
             self.state["escalation_required"] = True
             msg = f"ESCALATED: Signal requires human review."
