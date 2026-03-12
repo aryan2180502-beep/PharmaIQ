@@ -18,8 +18,9 @@ import os
 def route_signal_with_gemini(signal: dict):
     """Uses Gemini to intelligently route signals to the correct agent."""
     try:
-        # Load prompts
-        prompt_dir = "backend/prompts"
+        # Load prompts using absolute paths
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        prompt_dir = os.path.join(base_dir, "prompts")
         with open(os.path.join(prompt_dir, "routing_system.txt"), "r") as f:
             system_prompt = f.read()
         with open(os.path.join(prompt_dir, "routing_user.txt"), "r") as f:
@@ -71,7 +72,9 @@ class Orchestrator:
     def log_alert(self, agent: str, store_id: int, sig_type: str, severity: str, action: str, human_needed: bool = False):
         """Logs an alert to the SQLite database with flow details."""
         import sqlite3
-        conn = sqlite3.connect("backend/db/pharmaiq.db")
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        db_path = os.path.join(base_dir, "db", "pharmaiq.db")
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
         # Format the action as a flow: Orchestrator ---> Agent | Action
@@ -88,7 +91,9 @@ class Orchestrator:
     def resolve_previous_alerts(self, store_id: int, sig_type: str):
         """Resolves previous pending alerts of the same type for a store when a healthy signal arrives."""
         import sqlite3
-        conn = sqlite3.connect("backend/db/pharmaiq.db")
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        db_path = os.path.join(base_dir, "db", "pharmaiq.db")
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
         # Mark previous alerts of same type/store as resolved

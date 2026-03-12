@@ -6,7 +6,9 @@ class CritiqueAgent:
     
     def __init__(self):
         self.name = "CRITIQUE"
-        prompt_path = os.path.join("prompts", "critique_system.txt")
+        # Use robust absolute path
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        prompt_path = os.path.join(base_dir, "prompts", "critique_system.txt")
         with open(prompt_path, "r") as f:
             self.system_prompt = f.read()
 

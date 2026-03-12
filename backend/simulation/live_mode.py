@@ -3,7 +3,17 @@ import os
 import json
 import time
 import random
-sys.path.append(os.getcwd())
+
+# Force unbuffered output
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
+print("PHARMAIQ: Initializing Simulation...")
+
+# Ensure project root is in path for imports
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 from backend.agents.orchestrator import Orchestrator
 from backend.tools.llm_utils import get_gemini_response
@@ -45,5 +55,13 @@ def start_live_mode():
     except KeyboardInterrupt:
         print("\nStopping Live Mode.")
 
+print("LIVE_MODE: Script loaded.")
+
 if __name__ == "__main__":
-    start_live_mode()
+    print("LIVE_MODE: Starting execution...")
+    try:
+        start_live_mode()
+    except Exception as e:
+        print(f"LIVE_MODE: FATAL ERROR: {e}")
+        import traceback
+        traceback.print_exc()
