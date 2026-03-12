@@ -1,6 +1,6 @@
 import json
 import os
-from tools.llm_utils import get_gemini_response
+from backend.tools.llm_utils import get_gemini_response
 
 def generate_signals():
     """Generates dynamic test signals using Gemini."""

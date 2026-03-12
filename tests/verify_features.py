@@ -4,8 +4,8 @@ import sqlite3
 import time
 
 sys.path.append(os.getcwd())
-from agents.orchestrator import Orchestrator
-from frontend.dashboard_api import sync_dashboard
+from backend.agents.orchestrator import Orchestrator
+from backend.dashboard_api import sync_dashboard
 
 def test_critique_and_resolution():
     print("--- Starting Verification Test ---")
@@ -22,7 +22,7 @@ def test_critique_and_resolution():
     sync_dashboard()
     
     # 3. Check DB for pending escalation
-    conn = sqlite3.connect("db/pharmaiq.db")
+    conn = sqlite3.connect("backend/db/pharmaiq.db")
     cursor = conn.cursor()
     cursor.execute("SELECT alert_id FROM alerts WHERE human_needed = 1 AND status = 'pending' ORDER BY ts DESC LIMIT 1")
     row = cursor.fetchone()
@@ -32,7 +32,7 @@ def test_critique_and_resolution():
         
         # 4. Test Manual Resolution (via API call simulation)
         print(f"\n[3] Testing Manual Resolution for alert {alert_id}...")
-        from frontend.dashboard_api import resolve_alert
+        from backend.dashboard_api import resolve_alert
         resolve_alert(alert_id)
         
         # Verify resolution

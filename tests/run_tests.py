@@ -3,7 +3,7 @@ import os
 import json
 sys.path.append(os.getcwd())
 
-from agents.orchestrator import Orchestrator
+from backend.agents.orchestrator import Orchestrator
 from tests.generate_test_data import generate_signals
 
 def run_stress_test():
