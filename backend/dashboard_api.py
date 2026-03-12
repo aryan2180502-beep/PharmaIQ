@@ -2,7 +2,7 @@ import sqlite3
 import json
 import os
 
-DB_PATH = "db/pharmaiq.db"
+DB_PATH = "backend/db/pharmaiq.db"
 DATA_JSON_PATH = "frontend/data.json"
 
 def sync_dashboard():

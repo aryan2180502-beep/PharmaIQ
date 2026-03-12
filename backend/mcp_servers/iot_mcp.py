@@ -2,7 +2,7 @@ import sqlite3
 import random
 from datetime import datetime
 
-DB_PATH = "db/pharmaiq.db"
+DB_PATH = "backend/db/pharmaiq.db"
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)

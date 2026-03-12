@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime, timedelta
 
-DB_PATH = "db/pharmaiq.db"
+DB_PATH = "backend/db/pharmaiq.db"
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)

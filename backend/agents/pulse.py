@@ -1,6 +1,6 @@
-from mcp_servers.erp_mcp import raise_po
-from mcp_servers.inventory_mcp import flag_markdown
-from vector_store.ingest import KnowledgeStore
+from backend.mcp_servers.erp_mcp import raise_po
+from backend.mcp_servers.inventory_mcp import flag_markdown
+from backend.vector_store.ingest import KnowledgeStore
 
 class PULSE:
     """Predictive Unified Life-Sciences Engine."""
@@ -10,7 +10,7 @@ class PULSE:
         self.ks = KnowledgeStore()
 
     def run(self, signal: dict):
-        from tools.llm_utils import extract_signal_data, parse_signal_intent
+        from backend.tools.llm_utils import extract_signal_data, parse_signal_intent
         
         # 1. AI-powered extraction/normalization
         flat_data = extract_signal_data("PULSE", signal)
@@ -40,7 +40,7 @@ class PULSE:
         
         # Level 1: +20% WoW
         if 20 <= wow_growth < 50:
-            from tools.llm_utils import get_gemini_response
+            from backend.tools.llm_utils import get_gemini_response
             insight = get_gemini_response(f"Generate 1 technical demand insight for a pharmacist for {district} seeing {wow_growth}% growth in fever cases.")
             return f"INFO: {insight}"
 

@@ -1,6 +1,6 @@
 import google.generativeai as genai
 import json
-from config import GEMINI_API_KEY
+from backend.config import GEMINI_API_KEY
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)

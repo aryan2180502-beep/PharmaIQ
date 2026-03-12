@@ -12,14 +12,14 @@ class AgentState(TypedDict):
     decision_threshold_exceeded: bool
     escalation_required: bool
 
-from tools.llm_utils import get_gemini_response
+from backend.tools.llm_utils import get_gemini_response
 import os
 
 def route_signal_with_gemini(signal: dict):
     """Uses Gemini to intelligently route signals to the correct agent."""
     try:
         # Load prompts
-        prompt_dir = "prompts"
+        prompt_dir = "backend/prompts"
         with open(os.path.join(prompt_dir, "routing_system.txt"), "r") as f:
             system_prompt = f.read()
         with open(os.path.join(prompt_dir, "routing_user.txt"), "r") as f:
@@ -71,7 +71,7 @@ class Orchestrator:
     def log_alert(self, agent: str, store_id: int, sig_type: str, severity: str, action: str, human_needed: bool = False):
         """Logs an alert to the SQLite database with flow details."""
         import sqlite3
-        conn = sqlite3.connect("db/pharmaiq.db")
+        conn = sqlite3.connect("backend/db/pharmaiq.db")
         cursor = conn.cursor()
         
         # Format the action as a flow: Orchestrator ---> Agent | Action
@@ -88,7 +88,7 @@ class Orchestrator:
     def resolve_previous_alerts(self, store_id: int, sig_type: str):
         """Resolves previous pending alerts of the same type for a store when a healthy signal arrives."""
         import sqlite3
-        conn = sqlite3.connect("db/pharmaiq.db")
+        conn = sqlite3.connect("backend/db/pharmaiq.db")
         cursor = conn.cursor()
         
         # Mark previous alerts of same type/store as resolved
@@ -114,14 +114,14 @@ class Orchestrator:
         if target in ["SOMA", "PULSE"]:
             agent_instance = None
             if target == "SOMA":
-                from agents.soma import SOMA
+                from backend.agents.soma import SOMA
                 agent_instance = SOMA()
             else:
-                from agents.pulse import PULSE
+                from backend.agents.pulse import PULSE
                 agent_instance = PULSE()
             
             # --- START CRITIQUE LOOP ---
-            from agents.critique import CritiqueAgent
+            from backend.agents.critique import CritiqueAgent
             critique_agent = CritiqueAgent()
             
             max_retries = 2

@@ -5,14 +5,14 @@ import time
 import random
 sys.path.append(os.getcwd())
 
-from agents.orchestrator import Orchestrator
-from tools.llm_utils import get_gemini_response
-from frontend.dashboard_api import sync_dashboard
+from backend.agents.orchestrator import Orchestrator
+from backend.tools.llm_utils import get_gemini_response
+from backend.dashboard_api import sync_dashboard
 
 def generate_live_signal():
     """Uses Gemini to generate a random live signal for any of the 10 stores."""
     store_id = random.randint(1, 10)
-    prompt_path = "prompts/daily_signal_gen.txt"
+    prompt_path = "backend/prompts/daily_signal_gen.txt"
     with open(prompt_path, "r") as f:
         template = f.read()
     

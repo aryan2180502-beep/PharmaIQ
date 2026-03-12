@@ -1,8 +1,8 @@
-from mcp_servers.iot_mcp import trigger_alert
-from mcp_servers.hrms_mcp import update_shift
-from mcp_servers.erp_mcp import quarantine_batch
-from vector_store.ingest import KnowledgeStore
-from tools.llm_utils import summarize_action
+from backend.mcp_servers.iot_mcp import trigger_alert
+from backend.mcp_servers.hrms_mcp import update_shift
+from backend.mcp_servers.erp_mcp import quarantine_batch
+from backend.vector_store.ingest import KnowledgeStore
+from backend.tools.llm_utils import summarize_action
 
 class SOMA:
     """Store Operations & Monitoring Agent."""
@@ -12,7 +12,7 @@ class SOMA:
         self.ks = KnowledgeStore()
 
     def run(self, signal: dict):
-        from tools.llm_utils import extract_signal_data, parse_signal_intent
+        from backend.tools.llm_utils import extract_signal_data, parse_signal_intent
         
         # 1. AI-powered extraction/normalization
         flat_data = extract_signal_data("SOMA", signal)

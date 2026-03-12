@@ -1,5 +1,5 @@
 import os
-from tools.llm_utils import get_gemini_response
+from backend.tools.llm_utils import get_gemini_response
 
 class CritiqueAgent:
     """Critique Agent that evaluates other agents' outputs."""

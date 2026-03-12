@@ -8,26 +8,27 @@ PharmaIQ follows a modular agentic architecture centered around a **Master Orche
 
 ```mermaid
 graph TD
-    A[IoT Telemetry / Signals] --> B[Master Orchestrator]
+    A[IoT Telemetry / Signals] --> B[backend/agents/orchestrator.py]
     B -->|Gemini Routing| C{Signal Type}
-    C -->|Temperature/Supply| D[SOMA Agent]
-    C -->|Demand/Forecasting| E[PULSE Agent]
+    C -->|Temperature/Supply| D[backend/agents/soma.py]
+    C -->|Demand/Forecasting| E[backend/agents/pulse.py]
     C -->|Ambiguous| F[Human Escalation]
     
-    D --> G[(SQLite Database)]
+    D --> G[(backend/db/pharmaiq.db)]
     E --> G
     F --> G
     
-    G --> H[Dashboard API]
-    H --> I[data.json Feed]
-    I --> J[Dynamic Web Dashboard]
+    G --> H[backend/dashboard_api.py]
+    H --> I[frontend/data.json]
+    I --> J[frontend/dashboard.html]
 ```
 
 ### Core Components:
-- **Master Orchestrator**: Uses Gemini to analyze natural language or structured JSON signals and route them to specific agents.
-- **SOMA (Supply & Ops Management Agent)**: Handles inventory, cold-chain breaches, and supply chain logistics.
-- **PULSE (Predictive Uplift & Logistics Analytics)**: Generates demand forecasts and alerts for stock-outs or surges.
-- **Dynamic Dashboard**: A Vanilla JS/CSS frontend that auto-refreshes every 5 seconds using a local JSON feed.
+- **`backend/agents`**: Specialized AI handlers for supply chain and demand forecasting.
+- **`backend/simulation`**: Live telemetry generation engine.
+- **`backend/db`**: SQLite storage for alerts and inventory state.
+- **`backend/mcp_servers`**: Interface for IoT sensors, HRMS, and ERP systems.
+- **`frontend/`**: Vanilla JS/CSS dashboard and local web server.
 
 ## 🚀 Getting Started
 

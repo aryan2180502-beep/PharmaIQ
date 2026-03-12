@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # PharmaIQ Configuration
-DB_PATH = "db/pharmaiq.db"
-CHROMA_PATH = "vector_store/chroma"
+DB_PATH = "backend/db/pharmaiq.db"
+CHROMA_PATH = "backend/vector_store/chroma"
 
 # Operational Thresholds
 TEMP_THRESHOLD_UPPER = 8.0

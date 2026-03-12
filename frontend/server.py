@@ -33,7 +33,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if self.path.startswith("/api/resolve/"):
             try:
                 alert_id = int(self.path.rstrip("/").split("/")[-1])
-                from frontend.dashboard_api import resolve_alert
+                from backend.dashboard_api import resolve_alert
                 resolve_alert(alert_id)
                 body = json.dumps({"status": "success", "alert_id": alert_id}).encode()
                 self.send_response(200)
