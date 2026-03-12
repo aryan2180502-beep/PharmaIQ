@@ -14,20 +14,24 @@ graph TD
     C -->|Demand/Forecasting| E[backend/agents/pulse.py]
     C -->|Ambiguous| F[Human Escalation]
     
-    D --> G[(backend/db/pharmaiq.db)]
+    D --> G{backend/agents/critique.py}
     E --> G
-    F --> G
+    G -->|Validation Passed| H[(backend/db/pharmaiq.db)]
+    G -->|Retry Feedback| D
+    G -->|Retry Feedback| E
+    F --> H
     
-    G --> H[backend/dashboard_api.py]
-    H --> I[frontend/data.json]
-    I --> J[frontend/dashboard.html]
+    H --> I[backend/dashboard_api.py]
+    I --> J[frontend/data.json]
+    J --> K[frontend/dashboard.html]
 ```
 
 ### Core Components:
-- **`backend/agents`**: Specialized AI handlers for supply chain and demand forecasting.
-- **`backend/simulation`**: Live telemetry generation engine.
-- **`backend/db`**: SQLite storage for alerts and inventory state.
-- **`backend/mcp_servers`**: Interface for IoT sensors, HRMS, and ERP systems.
+- **`backend/agents/orchestrator.py`**: Intelligent router using Gemini to dispatch signals.
+- **`backend/agents/critique.py`**: **[NEW]** Automated review layer that validates and refines AI actions.
+- **`backend/agents/[soma/pulse].py`**: Specialized handlers for logistics and predictive demand.
+- **`backend/simulation`**: Real-time IoT and market signal generation engine.
+- **`backend/db`**: Persistence layer for alerts, state, and audit logs.
 - **`frontend/`**: Vanilla JS/CSS dashboard and local web server.
 
 ## 🚀 Getting Started
